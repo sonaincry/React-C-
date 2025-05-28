@@ -4,13 +4,34 @@
   padding: 20px;
   border-radius: 10px;
   background: linear-gradient(to right, #d6e0f0, #f5d7f7);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
+.header-row {
+  display: grid;
+  grid-template-columns: 1fr 6fr 1fr; /* Simulates 1-6-1 grid */
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
 }
+
+.logo-container {
+  justify-self: start;
+}
+
+.logo-container img {
+  max-height: 80px;
+  height: auto;
+}
+
+.form-heading {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  margin: 0;
+  justify-self: center;
+}
+
 
 .registration-form {
   display: flex;
@@ -18,25 +39,15 @@ h2 {
   gap: 20px;
 }
 
-.logo-container {
-  text-align: left;
-  margin-bottom: 10px;
-}
-
-.logo {
-  max-width: 150px; /* Adjust size as needed */
-  height: auto;
-}
-
 .form-columns {
   display: flex;
-  flex-wrap: wrap;
   gap: 20px;
+  flex-wrap: wrap;
 }
 
 .form-column {
   flex: 1;
-  min-width: 250px;
+  min-width: 280px;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -44,72 +55,25 @@ h2 {
 
 .form-column label {
   font-weight: bold;
-  margin-bottom: 2px; /* Reduced from 4px to make label and input closer */
+  margin-bottom: 4px;
 }
 
 .form-column input[type="text"],
-.form-column input[type="tel"],
-.form-column input[type="file"] {
+.form-column input[type="tel"] {
   padding: 10px;
   font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 6px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
-.form-buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-
-.back-button,
-.register-button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.back-button {
-  background-color: #ccc;
-  color: #333;
-}
-
-.register-button {
-  background-color: #6a0dad;
-  color: #fff;
-}
-.input-error-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.error-message {
-  color: red;
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-.error-input {
+input.input-error {
   border-color: red;
 }
+
 .input-wrapper {
   position: relative;
-  width: 100%;
-}
-
-input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 8px 12px;
-  font-size: 14px;
-  padding-right: 160px; /* Reserve space inside for error */
-}
-
-.input-error {
-  border: 1px solid red;
 }
 
 .error-inside {
@@ -120,22 +84,67 @@ input {
   color: red;
   font-size: 12px;
   white-space: nowrap;
-  pointer-events: none;
   background-color: transparent;
+  pointer-events: none;
 }
 
+.form-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.register-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+
+.register-button {
+  background-color: #6a0dad;
+  color: white;
+}
+
+.register-button:hover {
+  background-color: #5a0099;
+}
 
 @media (max-width: 768px) {
   .form-columns {
     flex-direction: column;
   }
 
-  .form-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px; 
+  .header-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
   }
-  .back-button {
-  margin-right: 10px;
+
+  .logo-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .logo-container img {
+    max-width: 100px;
+    height: auto;
+  }
+
+  .form-heading {
+    font-size: 20px;
+    margin-top: 10px;
+  }
+
+  .form-buttons {
+    justify-content: flex-end;
+    gap: 10px;
+  }
 }
-}
+

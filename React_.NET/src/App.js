@@ -1,9 +1,10 @@
 import logo from './logo.svg';
 import './App.css';
 import RegistrationForm from './components/RegistrationForm';
+import LoginPage from './components/LoginPage';
 
 function App() {
-  return <RegistrationForm />;
+  return <LoginPage />;
 }
 
 export default App;
