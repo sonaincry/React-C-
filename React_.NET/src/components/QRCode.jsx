@@ -9,7 +9,7 @@ const VatDetails = () => {
 
   useEffect(() => {
     axios
-      .get(`http://satramart.runasp.net/VATInformation/details?recid=${recid}`)
+      .get(`https://satramart.runasp.net/VATInformation/details?recid=${recid}`)
       .then((response) => {
         setData(response.data);
       })
