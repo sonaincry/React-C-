@@ -47,7 +47,7 @@ const VatDetails = () => {
   if (error) {
     return (
       <div className="vat-details-container">
-        <h2>VAT Information - RECID: {recid}</h2>
+        <h2>VAT Information</h2>
         <p className="error-message">Error: {error}</p>
       </div>
     );
@@ -56,14 +56,14 @@ const VatDetails = () => {
   if (!data) {
     return (
       <div className="vat-details-container">
-        <h2>VAT Information - RECID: {recid}</h2>
+        <h2>VAT Information</h2>
         <p className="no-data-message">No data found for RECID: {recid}</p>
       </div>
     );
   }
   return (
     <div className="vat-details-container">
-      <h2 className="vat-details-header">VAT Information - RECID: {recid}</h2>
+      <h2 className="vat-details-header">VAT Information</h2>
 
       <div className="details-card">
         <h3>Company Information</h3>
