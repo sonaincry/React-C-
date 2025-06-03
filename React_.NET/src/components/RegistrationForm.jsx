@@ -123,7 +123,7 @@ function RegistrationForm() {
 
 
   try {
-    const response = await fetch('http://localhost:35780/VATInformation/add', {
+    const response = await fetch('http://satramart.runasp.net/VATInformation/add', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
