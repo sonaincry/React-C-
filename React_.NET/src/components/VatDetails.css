@@ -1,0 +1,123 @@
+.vat-details-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 25px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+.vat-details-header {
+  font-size: 28px;
+  color: #6a0dad;
+  text-align: center;
+  margin-bottom: 30px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #eee;
+}
+
+.loading-message,
+.error-message,
+.no-data-message {
+  text-align: center;
+  font-size: 18px;
+  padding: 30px;
+  background-color: #ffebe6;
+  border: 1px solid #ffccb3;
+  color: #cc0000;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.loading-message {
+  background-color: #e6f7ff;
+  border-color: #b3e0ff;
+  color: #0066cc;
+}
+
+.details-card {
+  background-color: #ffffff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.details-card h3 {
+  font-size: 22px;
+  color: #444;
+  margin-top: 25px;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #e0e0e0;
+}
+
+.details-card h3:first-of-type {
+    margin-top: 0;
+}
+
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px dotted #f0f0f0;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #555;
+  flex-basis: 40%;
+  text-align: left;
+}
+
+.detail-value {
+  color: #222;
+  flex-basis: 60%;
+  text-align: right;
+  word-break: break-all;
+}
+
+@media (max-width: 768px) {
+  .vat-details-container {
+    margin: 20px auto;
+    padding: 15px;
+  }
+
+  .vat-details-header {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
+  .details-card {
+    padding: 15px;
+  }
+
+  .details-card h3 {
+    font-size: 20px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+  }
+
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 6px 0;
+  }
+
+  .detail-label,
+  .detail-value {
+    flex-basis: auto;
+    width: 100%;
+    text-align: left;
+  }
+
+  .detail-label {
+    margin-bottom: 2px;
+  }
+}
