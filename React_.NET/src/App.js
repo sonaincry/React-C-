@@ -5,7 +5,7 @@ import LoginPage from './components/LoginPage';
 import VatDetails from './components/QRCode'; 
 
 function App() {
-  return <VatDetails />;
+  return <RegistrationForm />;
 }
 
 export default App; 
