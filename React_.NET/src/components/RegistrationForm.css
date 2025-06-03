@@ -114,8 +114,19 @@ input.input-error {
 }
 
 @media (max-width: 768px) {
+  .registration-container {
+    margin: 0 auto;
+    padding: 15px;
+    padding-top: 30px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
   .form-columns {
     flex-direction: column;
+    gap: 15px;
   }
 
   .header-row {
@@ -124,6 +135,7 @@ input.input-error {
     align-items: center;
     text-align: center;
     gap: 10px;
+    margin-bottom: 20px;
   }
 
   .logo-container {
@@ -133,18 +145,18 @@ input.input-error {
   }
 
   .logo-container img {
-    max-width: 100px;
+    max-width: 80px;
     height: auto;
   }
 
   .form-heading {
     font-size: 20px;
-    margin-top: 10px;
+    margin-top: 5px;
   }
 
   .form-buttons {
-    justify-content: flex-end;
-    gap: 10px;
+    justify-content: center;
+    margin-top: 25px;
   }
 }
 
