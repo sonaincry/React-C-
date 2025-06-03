@@ -114,7 +114,7 @@ function RegistrationForm() {
   dataareaid: "string",
   recversion: 0,
   partition: 0,
-  recid: 0,
+  //recid: 0,
   email: customerEmail || "",
   phone: phoneNumber || "",
   custaccount: "",
