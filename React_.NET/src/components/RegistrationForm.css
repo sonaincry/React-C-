@@ -32,7 +32,6 @@
   justify-self: center;
 }
 
-
 .registration-form {
   display: flex;
   flex-direction: column;
@@ -52,10 +51,13 @@
   flex-direction: column;
   gap: 15px;
 }
-
-.form-column label {
+.form-column label,
+.registration-form .form-column label {
   font-weight: bold;
   margin-bottom: 4px;
+  text-align: left !important;
+  display: block;
+  width: 100%;
 }
 
 .form-column input[type="text"],
@@ -101,10 +103,6 @@ input.input-error {
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.2s;
-}
-
-
-.register-button {
   background-color: #147f83;
   color: white;
 }
@@ -158,5 +156,8 @@ input.input-error {
     justify-content: center;
     margin-top: 25px;
   }
+  .form-column label,
+  .registration-form .form-column label {
+    text-align: left !important;
+  }
 }
-
