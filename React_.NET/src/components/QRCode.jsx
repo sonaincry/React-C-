@@ -16,7 +16,7 @@ const VatDetails = () => {
       setRecid(recidFromUrl);
       setError('');
     } else {
-      setError('RECID not found.');
+      setError('RECID not found');
       setLoading(false);
     }
   }, []);
@@ -31,28 +31,24 @@ const VatDetails = () => {
       setLoading(true);
       setError('');    
       try {
+        const response = await axios.get(`https://satramart.runasp.net/VATInformation/details?recid=${recid}`);
+        setData(response.data);
+      } catch (err) {
+        if (err.response) {
+          setError(err.response.data?.message || JSON.stringify(err.response.data) || `Error fetching data: Server responded with status ${err.response.status}`);
+        } else if (err.request) {
+          setError('Error fetching data: No response from server. Check network connection or API endpoint.');
+        } else {
+          setError(`Error fetching data: ${err.message}`);
+        }
+        setData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        const response = await axios.get(`https://satramart.runasp.net/VATInformation/details?recid=${recid}`);
-
-        setData(response.data);
-
-      } catch (err) {
-
-        setError(err.response?.data || 'Error fetching data');
-
-      } finally {
-
-        setLoading(false);
-
-      }
-
-    };
-
-
-
-    fetchData();
-
-  }, [recid]);
+    fetchData();
+  }, [recid]);
 
   const renderDataRow = (label, value) => {
     const displayValue = (value === null || value === undefined || value === "") ? "N/A" : value.toString();
