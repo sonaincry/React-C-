@@ -64,15 +64,10 @@ const VatDetails = () => {
             </div>
 
         );
-
     };
 
-
-
     if (loading) {
-
         return (
-
             <div className="vat-details-container">
 
                 <h2>VAT Information</h2>
@@ -80,9 +75,7 @@ const VatDetails = () => {
                 <p className="loading-message">Loading VAT details...</p>
 
             </div>
-
         );
-
     }
 
 
