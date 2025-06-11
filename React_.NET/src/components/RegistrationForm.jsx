@@ -121,7 +121,7 @@ function RegistrationForm() {
   cancel: true,
 };
 
-
+//fetch('https://satramart.runasp.net/VATInformation/add'
   try {
     const response = await fetch('https://satramart.runasp.net/VATInformation/add', {
       method: 'POST',
@@ -241,3 +241,5 @@ function RegistrationForm() {
 }
 
 export default RegistrationForm;
+
+
