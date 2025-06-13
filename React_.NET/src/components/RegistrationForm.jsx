@@ -31,7 +31,7 @@ function RegistrationForm() {
         if (recidFromUrl && !isNaN(recidFromUrl)) {
             setRecid(recidFromUrl);
         } else {
-            setNotification('Error: RECID not found or invalid in URL.');
+            setNotification('');
         }
     }, [formKey]); // Re-run this effect when the form key changes
 
@@ -99,7 +99,6 @@ function RegistrationForm() {
             
             setNotification('Update successful! Your information has been saved.');
             
-            // --- MODIFIED: Force a re-render of the form to clear it ---
             setFormKey(prevKey => prevKey + 1);
 
         } catch (error) {
