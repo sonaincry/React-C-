@@ -1,245 +1,200 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './RegistrationForm.css';
 import logo from './logo.png';
 
 function RegistrationForm() {
-  const [customerEmail, setCustomerEmail] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [companyTaxNumber, setCompanyTaxNumber] = useState('');
-  const [taxError, setTaxError] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [phoneError, setPhoneError] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [companyAddress, setCompanyAddress] = useState('');
-  const [customerName, setCustomerName] = useState('');
-  const [notification, setNotification] = useState('');
+    // State for the form fields
+    const [companyName, setCompanyName] = useState('');
+    const [companyTaxNumber, setCompanyTaxNumber] = useState('');
+    const [companyAddress, setCompanyAddress] = useState('');
+    const [customerName, setCustomerName] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [customerEmail, setCustomerEmail] = useState('');
 
-  const validateEmail = (email) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-  };
+    // State for validation and notifications
+    const [emailError, setEmailError] = useState('');
+    const [taxError, setTaxError] = useState('');
+    const [phoneError, setPhoneError] = useState('');
+    const [notification, setNotification] = useState('');
 
-  const validateTaxNumber = (value) => {
-    return /^\d+$/.test(value);
-  };
+    // State to hold the recid, starting as null
+    const [recid, setRecid] = useState(null);
 
-  const validatePhoneNumber = (phone) => {
-    return /^0\d{9}$/.test(phone);
-  };
+    // --- NEW: A key to force the form to re-render ---
+    const [formKey, setFormKey] = useState(0);
 
-  const handleEmailChange = (e) => {
-    const value = e.target.value;
-    setCustomerEmail(value);
-    setEmailError('');
-  };
+    // This block runs once when the component first loads to get the recid from the URL
+    useEffect(() => {
+        const queryParams = new URLSearchParams(window.location.search);
+        const recidFromUrl = queryParams.get('recid');
 
-  const handleEmailBlur = (e) => {
-    const value = e.target.value;
-    if (value && !validateEmail(value)) {
-      setEmailError('Please enter a valid email.');
-    } else {
-      setEmailError('');
-    }
-  };
+        if (recidFromUrl && !isNaN(recidFromUrl)) {
+            setRecid(recidFromUrl);
+        } else {
+            setNotification('Error: RECID not found or invalid in URL.');
+        }
+    }, [formKey]); // Re-run this effect when the form key changes
 
-  const handleTaxNumberChange = (e) => {
-    setCompanyTaxNumber(e.target.value);
-    setTaxError('');
-  };
+    // --- Validation Functions (no changes needed) ---
+    const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const validateTaxNumber = (value) => /^\d+$/.test(value);
+    const validatePhoneNumber = (phone) => /^0\d{9}$/.test(phone);
+    const handleEmailChange = (e) => setCustomerEmail(e.target.value);
+    const handleTaxNumberChange = (e) => setCompanyTaxNumber(e.target.value);
+    const handlePhoneChange = (e) => setPhoneNumber(e.target.value);
+    
+    // --- The submit handler ---
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setNotification('');
 
-  const handleTaxNumberBlur = () => {
-    if (!companyTaxNumber) {
-      setTaxError('Company tax number is required.');
-    } else if (!validateTaxNumber(companyTaxNumber)) {
-      setTaxError('Only numbers are allowed.');
-    } else {
-      setTaxError('');
-    }
-  };
+        if (!recid) {
+            setNotification('Error: Cannot submit without a valid RECID.');
+            return;
+        }
 
-  const handlePhoneChange = (e) => {
-    setPhoneNumber(e.target.value);
-    setPhoneError('');
-  };
+        let valid = true;
+        if (!companyTaxNumber || !validateTaxNumber(companyTaxNumber)) {
+            setTaxError('Tax number is required and must be numeric.');
+            valid = false;
+        } else {
+            setTaxError('');
+        }
+        if (phoneNumber && !validatePhoneNumber(phoneNumber)) {
+            setPhoneError('Phone must be 10 digits and start with 0.');
+            valid = false;
+        } else {
+            setPhoneError('');
+        }
+        if (customerEmail && !validateEmail(customerEmail)) {
+            setEmailError('Please enter a valid email address.');
+            valid = false;
+        } else {
+            setEmailError('');
+        }
+        if (!valid) return;
 
-  const handlePhoneBlur = () => {
-    if (phoneNumber && !validatePhoneNumber(phoneNumber)) {
-      setPhoneError('Phone must be 10 digits and start with 0.');
-    } else {
-      setPhoneError('');
-    }
-  };
+        const payload = {
+            taxregnum: companyTaxNumber,
+            taxcompanyname: companyName,
+            taxcompanyaddress: companyAddress,
+            purchasername: customerName,
+            email: customerEmail || "",
+            phone: phoneNumber || "",
+        };
 
-  const handleSubmit = async (e) => {
-  e.preventDefault();
+        try {
+            setNotification('Saving...');
+            const response = await fetch(`https://10.0.83.4/VATInformation/addv2/${recid}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
 
-  let valid = true;
+            const responseData = await response.json();
 
-  if (!companyTaxNumber) {
-    setTaxError('Company tax number is required.');
-    valid = false;
-  } else if (!validateTaxNumber(companyTaxNumber)) {
-    setTaxError('Only numbers are allowed.');
-    valid = false;
-  }
+            if (!response.ok) {
+                throw new Error(responseData.message || 'Failed to save');
+            }
+            
+            setNotification('Update successful! Your information has been saved.');
+            
+            // --- MODIFIED: Force a re-render of the form to clear it ---
+            setFormKey(prevKey => prevKey + 1);
 
-  if (phoneNumber && !validatePhoneNumber(phoneNumber)) {
-    setPhoneError('Phone must be 10 digits and start with 0.');
-    valid = false;
-  }
+        } catch (error) {
+            setNotification(`Error: ${error.message}`);
+            console.error('Error saving form:', error);
+        }
+    };
 
-  if (customerEmail && !validateEmail(customerEmail)) {
-    setEmailError('Please enter a valid email address.');
-    valid = false;
-  }
-
-  if (!valid) return;
-
-  const payload = {
-  combination: true,
-  custrequest: true,
-  formformat: "string",
-  formnum: "string",
-  invoicedate: "string",
-  invoicenum: 0,
-  purchasername: customerName,
-  retailtransactiontable: 0,
-  retailtransrecidgroup: 0,
-  serialnum: "string",
-  taxcompanyaddress: companyAddress,
-  taxcompanyname: companyName,
-  taxregnum: companyTaxNumber,
-  taxtranstxt: "string",
-  transtime: 0,
-  dataareaid: "string",
-  recversion: 0,
-  partition: 0,
-  //recid: 0,
-  email: customerEmail || "",
-  phone: phoneNumber || "",
-  custaccount: "",
-  cancel: true,
-};
-
-//fetch('https://satramart.runasp.net/VATInformation/add'
-  try {
-    const response = await fetch('https://satramart.runasp.net/VATInformation/add', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to save');
-    }
-
-    const data = await response.json();
-    setNotification('Registration successful! Your information has been saved.');
-    console.log('Saved successfully', data);
-
-  } catch (error) {
-     setNotification('Error: Failed to save your information.');
-    console.error('Error saving form:', error);
-  }
-};
-
-  return (
-    <div className="registration-container">
-      <div className="header-row">
-        <div className="logo-container">
-          <img src={logo} alt="Company Logo" className="logo" />
-        </div>
-        <h2 className="form-heading">THÔNG TIN XUẤT HÓA ĐƠN</h2>
-      </div>
-      <form className="registration-form" onSubmit={handleSubmit}>
-
-        <div></div>
-        <div></div>
-        <div className="form-columns">
-          <div className="form-column">
-            <label>Tên Công Ty</label>
-            <input
-              type="text"
-              placeholder="Enter company name"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-            />
-
-            <label>Mã Số Thuế</label>
-            <div className="input-wrapper">
-              <input
-                type="text"
-                placeholder={taxError ? "" : "Enter tax number"}
-                value={companyTaxNumber}
-                onChange={handleTaxNumberChange}
-                onBlur={handleTaxNumberBlur}
-                className={taxError ? "input-error" : ""}
-              />
-              {taxError && <span className="error-inside">{taxError}</span>}
+    return (
+        <div className="registration-container" key={formKey}>
+            <div className="header-row">
+                <div className="logo-container">
+                    <img src={logo} alt="Company Logo" className="logo" />
+                </div>
+                <h2 className="form-heading">THÔNG TIN XUẤT HÓA ĐƠN</h2>
             </div>
+            <form className="registration-form" onSubmit={handleSubmit}>
+                <div className="form-columns">
+                    <div className="form-column">
+                        <label>Tên Công Ty</label>
+                        <input
+                            type="text"
+                            placeholder="Enter company name"
+                            value={companyName}
+                            onChange={(e) => setCompanyName(e.target.value)}
+                        />
 
-            <label>Địa Chỉ Công Ty</label>
-            <input
-              type="text"
-              placeholder="Enter company address"
-              value={companyAddress}
-              onChange={(e) => setCompanyAddress(e.target.value)}
-            />
-          </div>
+                        <label>Mã Số Thuế</label>
+                        <div className="input-wrapper">
+                            <input
+                                type="text"
+                                placeholder={taxError ? "" : "Enter tax number"}
+                                value={companyTaxNumber}
+                                onChange={handleTaxNumberChange}
+                                className={taxError ? "input-error" : ""}
+                            />
+                            {taxError && <span className="error-inside">{taxError}</span>}
+                        </div>
 
-          <div className="form-column">
-            <label>Người Mua Hàng</label>
-            <input
-              type="text"
-              placeholder="Enter customer name"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-            />
+                        <label>Địa Chỉ Công Ty</label>
+                        <input
+                            type="text"
+                            placeholder="Enter company address"
+                            value={companyAddress}
+                            onChange={(e) => setCompanyAddress(e.target.value)}
+                        />
+                    </div>
 
-            <label>Số Điện Thoại</label>
-            <div className="input-wrapper">
-              <input
-                type="tel"
-                placeholder={phoneError ? "" : "Enter phone number"}
-                value={phoneNumber}
-                onChange={handlePhoneChange}
-                onBlur={handlePhoneBlur}
-                className={phoneError ? "input-error" : ""}
-              />
-              {phoneError && <span className="error-inside">{phoneError}</span>}
-            </div>
-            <label>Email</label>
-            <div className="input-wrapper">
-              <input
-                type="text"
-                placeholder={emailError ? "" : "Enter customer email"}
-                value={customerEmail}
-                onChange={handleEmailChange}
-                onBlur={handleEmailBlur}
-                className={emailError ? "input-error" : ""}
-              />
-              {emailError && <span className="error-inside">{emailError}</span>}
-            </div>
+                    <div className="form-column">
+                        <label>Người Mua Hàng</label>
+                        <input
+                            type="text"
+                            placeholder="Enter customer name"
+                            value={customerName}
+                            onChange={(e) => setCustomerName(e.target.value)}
+                        />
 
+                        <label>Số Điện Thoại</label>
+                        <div className="input-wrapper">
+                            <input
+                                type="tel"
+                                placeholder={phoneError ? "" : "Enter phone number"}
+                                value={phoneNumber}
+                                onChange={handlePhoneChange}
+                                className={phoneError ? "input-error" : ""}
+                            />
+                            {phoneError && <span className="error-inside">{phoneError}</span>}
+                        </div>
 
-          </div>
+                        <label>Email</label>
+                        <div className="input-wrapper">
+                            <input
+                                type="text"
+                                placeholder={emailError ? "" : "Enter customer email"}
+                                value={customerEmail}
+                                onChange={handleEmailChange}
+                                className={emailError ? "input-error" : ""}
+                            />
+                            {emailError && <span className="error-inside">{emailError}</span>}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="form-buttons">
+                    <button type="submit" className="register-button">Đăng ký</button>
+                </div>
+
+                {notification && (
+                    <div className="notification" style={{ marginTop: '20px', textAlign: 'center', color: notification.includes('Error') ? 'red' : 'green' }}>
+                        {notification}
+                    </div>
+                )}
+            </form>
         </div>
-
-        <div className="form-buttons">
-          <button type="submit" className="register-button">Đăng ký</button>
-        </div>
-        {notification && (
-          <div className="notification" style={{ marginTop: '20px', textAlign: 'center', color: notification.includes('Error') ? 'red' : 'green' }}>
-            {notification}
-          </div>
-        )}
-      </form>
-    </div>
-  );
+    );
 }
 
 export default RegistrationForm;
-
-

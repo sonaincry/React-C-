@@ -1,138 +1,200 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import './VatDetails.css';
+import React, { useState, useEffect } from 'react';
+import './RegistrationForm.css';
+import logo from './logo.png';
 
-const VatDetails = () => {
-  const [data, setData] = useState(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [recid, setRecid] = useState(null);
+function RegistrationForm() {
+    // State for the form fields
+    const [companyName, setCompanyName] = useState('');
+    const [companyTaxNumber, setCompanyTaxNumber] = useState('');
+    const [companyAddress, setCompanyAddress] = useState('');
+    const [customerName, setCustomerName] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [customerEmail, setCustomerEmail] = useState('');
 
-  // Get recid from URL parameters
-  useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-    const recidFromUrl = queryParams.get('recid');
+    // State for validation and notifications
+    const [emailError, setEmailError] = useState('');
+    const [taxError, setTaxError] = useState('');
+    const [phoneError, setPhoneError] = useState('');
+    const [notification, setNotification] = useState('');
 
-    if (recidFromUrl) {
-      setRecid(recidFromUrl);
-      setError('');
-    } else {
-      setError('RECID not found in URL parameters');
-      setLoading(false);
-    }
-  }, []);
+    // State to hold the recid, starting as null
+    const [recid, setRecid] = useState(null);
 
-  // Fetch data when recid is available
-  useEffect(() => {
-    if (!recid) {
-      if (!error) setLoading(false);
-      return;
-    }
+    // --- NEW: A key to force the form to re-render ---
+    const [formKey, setFormKey] = useState(0);
 
-    const fetchData = async () => {
-      setLoading(true);
-      setError('');
-      setData(null);
-      
-      try {
-        const response = await axios.get(`https://satramart.runasp.net/VATInformation/details?recid=${recid}`);
-        setData(response.data);
-      } catch (err) {
-        if (err.response) {
-          setError(err.response.data?.message || JSON.stringify(err.response.data) || `Error fetching data: Server responded with status ${err.response.status}`);
-        } else if (err.request) {
-          setError('Error fetching data: No response from server. Check network connection or API endpoint.');
+    // This block runs once when the component first loads to get the recid from the URL
+    useEffect(() => {
+        const queryParams = new URLSearchParams(window.location.search);
+        const recidFromUrl = queryParams.get('recid');
+
+        if (recidFromUrl && !isNaN(recidFromUrl)) {
+            setRecid(recidFromUrl);
         } else {
-          setError(`Error fetching data: ${err.message}`);
+            setNotification('Error: RECID not found or invalid in URL.');
         }
-        setData(null);
-      } finally {
-        setLoading(false);
-      }
+    }, [formKey]); // Re-run this effect when the form key changes
+
+    // --- Validation Functions (no changes needed) ---
+    const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const validateTaxNumber = (value) => /^\d+$/.test(value);
+    const validatePhoneNumber = (phone) => /^0\d{9}$/.test(phone);
+    const handleEmailChange = (e) => setCustomerEmail(e.target.value);
+    const handleTaxNumberChange = (e) => setCompanyTaxNumber(e.target.value);
+    const handlePhoneChange = (e) => setPhoneNumber(e.target.value);
+    
+    // --- The submit handler ---
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setNotification('');
+
+        if (!recid) {
+            setNotification('Error: Cannot submit without a valid RECID.');
+            return;
+        }
+
+        let valid = true;
+        if (!companyTaxNumber || !validateTaxNumber(companyTaxNumber)) {
+            setTaxError('Tax number is required and must be numeric.');
+            valid = false;
+        } else {
+            setTaxError('');
+        }
+        if (phoneNumber && !validatePhoneNumber(phoneNumber)) {
+            setPhoneError('Phone must be 10 digits and start with 0.');
+            valid = false;
+        } else {
+            setPhoneError('');
+        }
+        if (customerEmail && !validateEmail(customerEmail)) {
+            setEmailError('Please enter a valid email address.');
+            valid = false;
+        } else {
+            setEmailError('');
+        }
+        if (!valid) return;
+
+        const payload = {
+            taxregnum: companyTaxNumber,
+            taxcompanyname: companyName,
+            taxcompanyaddress: companyAddress,
+            purchasername: customerName,
+            email: customerEmail || "",
+            phone: phoneNumber || "",
+        };
+
+        try {
+            setNotification('Saving...');
+            const response = await fetch(`https://10.0.83.4/VATInformation/addv2/${recid}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            const responseData = await response.json();
+
+            if (!response.ok) {
+                throw new Error(responseData.message || 'Failed to save');
+            }
+            
+            setNotification('Update successful! Your information has been saved.');
+            
+            // --- MODIFIED: Force a re-render of the form to clear it ---
+            setFormKey(prevKey => prevKey + 1);
+
+        } catch (error) {
+            setNotification(`Error: ${error.message}`);
+            console.error('Error saving form:', error);
+        }
     };
 
-    fetchData();
-  }, [recid]);
-
-  const renderDataRow = (label, value) => {
-    const displayValue = (value === null || value === undefined || value === "") ? "N/A" : value.toString();
     return (
-      <div className="detail-row">
-        <span className="detail-label">{label}:</span>
-        <span className="detail-value">{displayValue}</span>
-      </div>
+        <div className="registration-container" key={formKey}>
+            <div className="header-row">
+                <div className="logo-container">
+                    <img src={logo} alt="Company Logo" className="logo" />
+                </div>
+                <h2 className="form-heading">THÔNG TIN XUẤT HÓA ĐƠN</h2>
+            </div>
+            <form className="registration-form" onSubmit={handleSubmit}>
+                <div className="form-columns">
+                    <div className="form-column">
+                        <label>Tên Công Ty</label>
+                        <input
+                            type="text"
+                            placeholder="Enter company name"
+                            value={companyName}
+                            onChange={(e) => setCompanyName(e.target.value)}
+                        />
+
+                        <label>Mã Số Thuế</label>
+                        <div className="input-wrapper">
+                            <input
+                                type="text"
+                                placeholder={taxError ? "" : "Enter tax number"}
+                                value={companyTaxNumber}
+                                onChange={handleTaxNumberChange}
+                                className={taxError ? "input-error" : ""}
+                            />
+                            {taxError && <span className="error-inside">{taxError}</span>}
+                        </div>
+
+                        <label>Địa Chỉ Công Ty</label>
+                        <input
+                            type="text"
+                            placeholder="Enter company address"
+                            value={companyAddress}
+                            onChange={(e) => setCompanyAddress(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="form-column">
+                        <label>Người Mua Hàng</label>
+                        <input
+                            type="text"
+                            placeholder="Enter customer name"
+                            value={customerName}
+                            onChange={(e) => setCustomerName(e.target.value)}
+                        />
+
+                        <label>Số Điện Thoại</label>
+                        <div className="input-wrapper">
+                            <input
+                                type="tel"
+                                placeholder={phoneError ? "" : "Enter phone number"}
+                                value={phoneNumber}
+                                onChange={handlePhoneChange}
+                                className={phoneError ? "input-error" : ""}
+                            />
+                            {phoneError && <span className="error-inside">{phoneError}</span>}
+                        </div>
+
+                        <label>Email</label>
+                        <div className="input-wrapper">
+                            <input
+                                type="text"
+                                placeholder={emailError ? "" : "Enter customer email"}
+                                value={customerEmail}
+                                onChange={handleEmailChange}
+                                className={emailError ? "input-error" : ""}
+                            />
+                            {emailError && <span className="error-inside">{emailError}</span>}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="form-buttons">
+                    <button type="submit" className="register-button">Đăng ký</button>
+                </div>
+
+                {notification && (
+                    <div className="notification" style={{ marginTop: '20px', textAlign: 'center', color: notification.includes('Error') ? 'red' : 'green' }}>
+                        {notification}
+                    </div>
+                )}
+            </form>
+        </div>
     );
-  };
+}
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="vat-details-container">
-        <h2>VAT Information</h2>
-        <p className="loading-message">Loading VAT details...</p>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="vat-details-container">
-        <h2>VAT Information</h2>
-        <p className="error-message">Error: {error}</p>
-      </div>
-    );
-  }
-
-  // No data state
-  if (!data) {
-    return (
-      <div className="vat-details-container">
-        <h2>VAT Information</h2>
-        <p className="no-data-message">No data found for RECID: {recid}</p>
-      </div>
-    );
-  }
-
-  // Success state - render the beautiful UI
-  return (
-    <div className="vat-details-container">
-      <h2 className="vat-details-header">VAT Information</h2>
-
-      <div className="details-card">
-        <h3>Company Information</h3>
-        {renderDataRow('Company Name', data.taxcompanyname)}
-        {renderDataRow('Tax Number', data.taxregnum)}
-        {renderDataRow('Company Address', data.taxcompanyaddress)}
-
-        <h3>Purchaser Information</h3>
-        {renderDataRow('Purchaser Name', data.purchasername)}
-        {renderDataRow('Email', data.email)}
-        {renderDataRow('Phone', data.phone)}
-        {renderDataRow('Customer Account', data.custaccount)}
-
-        <h3>Invoice Details</h3>
-        {renderDataRow('Invoice Number', data.invoicenum)}
-        {renderDataRow('Invoice Date', data.invoicedate)}
-        {renderDataRow('Form Format', data.formformat)}
-        {renderDataRow('Form Number', data.formnum)}
-        {renderDataRow('Serial Number', data.serialnum)}
-        {renderDataRow('Tax Transaction Text', data.taxtranstxt)}
-        {renderDataRow('Transaction Time', data.transtime)}
-
-        <h3>System Information</h3>
-        {renderDataRow('Combination', data.combination ? 'Yes' : 'No')}
-        {renderDataRow('Customer Request', data.custrequest ? 'Yes' : 'No')}
-        {renderDataRow('Cancel', data.cancel ? 'Yes' : 'No')}
-        {renderDataRow('Retail Transaction Table', data.retailtransactiontable)}
-        {renderDataRow('Retail Trans RecID Group', data.retailtransrecidgroup)}
-        {renderDataRow('Data Area ID', data.dataareaid)}
-        {renderDataRow('Record Version', data.recversion)}
-        {renderDataRow('Partition', data.partition)}
-        {renderDataRow('Record ID', data.recid)}
-      </div>
-    </div>
-  );
-};
-
-export default VatDetails;
+export default RegistrationForm;
