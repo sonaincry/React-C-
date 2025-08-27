@@ -10,12 +10,15 @@ function RegistrationForm() {
     const [customerName, setCustomerName] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [customerEmail, setCustomerEmail] = useState('');
+    const [cccd, setCccd] = useState('');
+    const [maqhns, setMaqhns] = useState('');
 
     // State for validation and notifications
     const [emailError, setEmailError] = useState('');
     const [taxError, setTaxError] = useState('');
     const [phoneError, setPhoneError] = useState('');
     const [notification, setNotification] = useState('');
+    const [cccdError, setCccdError] = useState('');
 
     // State to hold the recid, starting as null
     const [recid, setRecid] = useState(null);
@@ -39,6 +42,7 @@ function RegistrationForm() {
     const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     const validateTaxNumber = (value) => /^\d+$/.test(value);
     const validatePhoneNumber = (phone) => /^0\d{9}$/.test(phone);
+    const validateCCCD = (value) => /^\d{12}$/.test(value);
     const handleEmailChange = (e) => setCustomerEmail(e.target.value);
     const handleTaxNumberChange = (e) => setCompanyTaxNumber(e.target.value);
     const handlePhoneChange = (e) => setPhoneNumber(e.target.value);
@@ -69,8 +73,15 @@ function RegistrationForm() {
         if (customerEmail && !validateEmail(customerEmail)) {
             setEmailError('Please enter a valid email address.');
             valid = false;
+            
         } else {
             setEmailError('');
+        }
+        if (cccd && !validateCCCD(cccd)) {
+            setCccdError('CCCD must be exactly 12 digits.');
+            valid = false;
+        } else {
+            setCccdError('');
         }
         if (!valid) return;
 
@@ -81,6 +92,8 @@ function RegistrationForm() {
             purchasername: customerName,
             email: customerEmail || "",
             phone: phoneNumber || "",
+            cccd: cccd || "",
+            maqhns: maqhns || ""
         };
 
         try {
@@ -145,6 +158,13 @@ function RegistrationForm() {
                             value={companyAddress}
                             onChange={(e) => setCompanyAddress(e.target.value)}
                         />
+                        <label>Mã QHNS</label>
+                        <input
+                            type="text"
+                            placeholder="Enter MAQHNS"
+                            value={maqhns}
+                            onChange={(e) => setMaqhns(e.target.value)}
+                        />
                     </div>
 
                     <div className="form-column">
@@ -178,6 +198,17 @@ function RegistrationForm() {
                                 className={emailError ? "input-error" : ""}
                             />
                             {emailError && <span className="error-inside">{emailError}</span>}
+                        </div>
+                        <label>CCCD</label>
+                        <div className="input-wrapper">
+                            <input
+                                type="text"
+                                placeholder={cccdError ? "" : "Enter 12-digit CCCD"}
+                                value={cccd}
+                                onChange={(e) => setCccd(e.target.value)}
+                                className={cccdError ? "input-error" : ""}
+                            />
+                            {cccdError && <span className="error-inside">{cccdError}</span>}
                         </div>
                     </div>
                 </div>
