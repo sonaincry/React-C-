@@ -21,22 +21,23 @@ function RegistrationForm() {
     const [cccdError, setCccdError] = useState('');
 
     // State to hold the recid, starting as null
-    const [recid, setRecid] = useState(null);
+    const [receiptId, setReceiptId] = useState(null);
 
     // --- NEW: A key to force the form to re-render ---
     const [formKey, setFormKey] = useState(0);
 
     // This block runs once when the component first loads to get the recid from the URL
     useEffect(() => {
-        const queryParams = new URLSearchParams(window.location.search);
-        const recidFromUrl = queryParams.get('recid');
+    const queryParams = new URLSearchParams(window.location.search);
+    const receiptIdFromUrl = queryParams.get('receiptid'); // <-- lowercase matches your URL
 
-        if (recidFromUrl && !isNaN(recidFromUrl)) {
-            setRecid(recidFromUrl);
-        } else {
-            setNotification('');
-        }
-    }, [formKey]); // Re-run this effect when the form key changes
+    if (receiptIdFromUrl) {
+        setReceiptId(receiptIdFromUrl);
+    } else {
+        setNotification('Error: ReceiptID is missing from URL.');
+    }
+}, [formKey]);
+
 
     // --- Validation Functions (no changes needed) ---
     const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -52,8 +53,8 @@ function RegistrationForm() {
         e.preventDefault();
         setNotification('');
 
-        if (!recid) {
-            setNotification('Error: Cannot submit without a valid RECID.');
+        if (!receiptId) {
+            setNotification('Error: Cannot submit without a valid ReceiptID.');
             return;
         }
 
@@ -98,12 +99,12 @@ function RegistrationForm() {
 
         try {
             setNotification('Saving...');
-            const response = await fetch(`https://10.0.83.4/VATInformation/addv2/${recid}`, {
+            const response = await fetch(`https://10.0.83.4/VATInformation/addv2/${encodeURIComponent(receiptId)}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
-
+            console.log('Fetch URL:', `https://10.0.83.4/VATInformation/addv2/${encodeURIComponent(receiptId)}`);
             const responseData = await response.json();
 
             if (!response.ok) {
