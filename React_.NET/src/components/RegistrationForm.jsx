@@ -3,7 +3,7 @@ import './RegistrationForm.css';
 import logo from './logo.png';
 
 function RegistrationForm() {
-    // State for the form fields
+
     const [companyName, setCompanyName] = useState('');
     const [companyTaxNumber, setCompanyTaxNumber] = useState('');
     const [companyAddress, setCompanyAddress] = useState('');
@@ -13,33 +13,48 @@ function RegistrationForm() {
     const [cccd, setCccd] = useState('');
     const [maqhns, setMaqhns] = useState('');
 
-    // State for validation and notifications
     const [emailError, setEmailError] = useState('');
     const [taxError, setTaxError] = useState('');
     const [phoneError, setPhoneError] = useState('');
     const [notification, setNotification] = useState('');
     const [cccdError, setCccdError] = useState('');
 
-    // State to hold the recid, starting as null
     const [receiptId, setReceiptId] = useState(null);
-
-    // --- NEW: A key to force the form to re-render ---
     const [formKey, setFormKey] = useState(0);
+    const [receiptParams, setReceiptParams] = useState(null);
 
-    // This block runs once when the component first loads to get the recid from the URL
     useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-    const receiptIdFromUrl = queryParams.get('receiptid'); // <-- lowercase matches your URL
+        const queryParams = new URLSearchParams(window.location.search);
+        const receiptid = queryParams.get('receiptid');
+        const date = queryParams.get('date');
+        const dataareaid = queryParams.get('dataareaid');
 
-    if (receiptIdFromUrl) {
-        setReceiptId(receiptIdFromUrl);
-    } else {
-        setNotification('Error: ReceiptID is missing from URL.');
-    }
-}, [formKey]);
+        if (!receiptid || !date || !dataareaid) {
+            setNotification("Error: Missing required URL parameters.");
+            return;
+        }
 
+        const fetchRecid = async () => {
+            try {
+                const res = await fetch(`https://10.0.83.4/VATInformation/get-recid?receiptId=${receiptid}`);
+                if (!res.ok) {
+                    setNotification("Error: Failed to fetch recid from server.");
+                    return;
+                }
+                const recidData = await res.json();
+                const recid = recidData;
 
-    // --- Validation Functions (no changes needed) ---
+                setReceiptId(receiptid);
+                setReceiptParams({ receiptid, date, recid, dataareaid });
+            } catch (err) {
+                console.error("Error fetching recid:", err);
+                setNotification("Error: Could not connect to server.");
+            }
+        };
+
+        fetchRecid();
+    }, []);
+
     const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     const validateTaxNumber = (value) => /^\d+$/.test(value);
     const validatePhoneNumber = (phone) => /^0\d{9}$/.test(phone);
@@ -47,14 +62,13 @@ function RegistrationForm() {
     const handleEmailChange = (e) => setCustomerEmail(e.target.value);
     const handleTaxNumberChange = (e) => setCompanyTaxNumber(e.target.value);
     const handlePhoneChange = (e) => setPhoneNumber(e.target.value);
-    
-    // --- The submit handler ---
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setNotification('');
 
-        if (!receiptId) {
-            setNotification('Error: Cannot submit without a valid ReceiptID.');
+        if (!receiptParams || !receiptParams.recid) {
+            setNotification('Error: Cannot submit without a valid recid.');
             return;
         }
 
@@ -74,7 +88,7 @@ function RegistrationForm() {
         if (customerEmail && !validateEmail(customerEmail)) {
             setEmailError('Please enter a valid email address.');
             valid = false;
-            
+
         } else {
             setEmailError('');
         }
@@ -87,36 +101,49 @@ function RegistrationForm() {
         if (!valid) return;
 
         const payload = {
-            taxregnum: companyTaxNumber,
-            taxcompanyname: companyName,
-            taxcompanyaddress: companyAddress,
-            purchasername: customerName,
-            email: customerEmail || "",
-            phone: phoneNumber || "",
-            cccd: cccd || "",
-            maqhns: maqhns || ""
+            TAXREGNUM: companyTaxNumber,
+            TAXCOMPANYNAME: companyName,
+            TAXCOMPANYADDRESS: companyAddress,
+            PURCHASERNAME: customerName,
+            EMAIL: customerEmail || "",
+            PHONE: phoneNumber || "",
+            CCCD: cccd || "",
+            MAQHNS: maqhns || "",
+            INVOICEDATE: receiptParams.date,
+            RETAILTRANSACTIONTABLE: receiptParams.recid,
+            DATAAREAID: receiptParams.dataareaid
         };
-
+        console.log(payload);
         try {
             setNotification('Saving...');
-            const response = await fetch(`https://10.0.83.4/VATInformation/addv2/${encodeURIComponent(receiptId)}`, {
-                method: 'PUT',
+            console.log("Payload being sent:", payload);
+
+            const response = await fetch(`https://10.0.83.4/VATInformation/receipt`, {
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
-            console.log('Fetch URL:', `https://10.0.83.4/VATInformation/addv2/${encodeURIComponent(receiptId)}`);
-            const responseData = await response.json();
 
-            if (!response.ok) {
-                throw new Error(responseData.message || 'Failed to save');
+            if (response.ok) {
+                setNotification('Save successful! Your information has been submitted.');
+                setCompanyName("");
+                setCompanyTaxNumber("");
+                setCompanyAddress("");
+                setCustomerName("");
+                setPhoneNumber("");
+                setCustomerEmail("");
+                setCccd("");
+                setMaqhns("");
+            } else if (response.status === 409) {
+                setNotification('Error: A record with this RetailTransactionTable already exists.');
+            } else if (response.status === 400) {
+                setNotification('Error: Invalid input data.');
+            } else {
+                setNotification('Error: Failed to save. Please try again.');
             }
-            
-            setNotification('Update successful! Your information has been saved.');
-            
-            setFormKey(prevKey => prevKey + 1);
 
         } catch (error) {
-            setNotification(`Error: ${error.message}`);
+            setNotification('Error: Server not reachable.');
             console.error('Error saving form:', error);
         }
     };
