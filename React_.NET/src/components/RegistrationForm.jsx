@@ -23,13 +23,50 @@ function RegistrationForm() {
     const [formKey, setFormKey] = useState(0);
     const [receiptParams, setReceiptParams] = useState(null);
 
+    // HMAC Secret Key (same as in your backend)
+    const HMAC_SECRET = "LdL3hgtuCk8MxiMN/Sc7xBfQdFnlp5o8GMxFPB5NIkA=";
+
+    // HMAC signature generation function
+    const generateHMACSignature = async (secretKey, data) => {
+        try {
+            // Convert base64 secret key to bytes
+            const keyBuffer = Uint8Array.from(atob(secretKey), c => c.charCodeAt(0));
+            
+            // Import the key
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw',
+                keyBuffer,
+                { name: 'HMAC', hash: 'SHA-256' },
+                false,
+                ['sign']
+            );
+            
+            // Convert data to bytes
+            const dataBuffer = new TextEncoder().encode(data);
+            
+            // Generate signature
+            const signature = await crypto.subtle.sign('HMAC', cryptoKey, dataBuffer);
+            
+            // Convert to hex string (lowercase)
+            const hashArray = Array.from(new Uint8Array(signature));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            return hashHex.toLowerCase();
+        } catch (error) {
+            console.error('Error generating HMAC signature:', error);
+            return null;
+        }
+    };
+
     useEffect(() => {
         const queryParams = new URLSearchParams(window.location.search);
         const receiptid = queryParams.get('receiptid');
         const date = queryParams.get('date');
         const dataareaid = queryParams.get('dataareaid');
+        const storeno = queryParams.get('storeno');
+        const sign = queryParams.get('sign');
 
-        if (!receiptid || !date || !dataareaid) {
+        if (!receiptid || !date || !dataareaid || !storeno || !sign) {
             setNotification("Error: Missing required URL parameters.");
             return;
         }
@@ -45,7 +82,7 @@ function RegistrationForm() {
                 const recid = recidData;
 
                 setReceiptId(receiptid);
-                setReceiptParams({ receiptid, date, recid, dataareaid });
+                setReceiptParams({ receiptid, date, recid, dataareaid, storeno, sign });
             } catch (err) {
                 console.error("Error fetching recid:", err);
                 setNotification("Error: Could not connect to server.");
@@ -88,7 +125,6 @@ function RegistrationForm() {
         if (customerEmail && !validateEmail(customerEmail)) {
             setEmailError('Please enter a valid email address.');
             valid = false;
-
         } else {
             setEmailError('');
         }
@@ -100,25 +136,41 @@ function RegistrationForm() {
         }
         if (!valid) return;
 
-        const payload = {
-            TAXREGNUM: companyTaxNumber,
-            TAXCOMPANYNAME: companyName,
-            TAXCOMPANYADDRESS: companyAddress,
-            PURCHASERNAME: customerName,
-            EMAIL: customerEmail || "",
-            PHONE: phoneNumber || "",
-            CCCD: cccd || "",
-            MAQHNS: maqhns || "",
-            INVOICEDATE: receiptParams.date,
-            RETAILTRANSACTIONTABLE: receiptParams.recid,
-            DATAAREAID: receiptParams.dataareaid
-        };
-        console.log(payload);
         try {
-            setNotification('Saving...');
-            console.log("Payload being sent:", payload);
+            setNotification('Generating signature and saving...');
 
-            const response = await fetch(`https://10.0.83.4/VATInformation/receipt`, {
+            // Generate HMAC signature
+            const rawData = `${receiptParams.receiptid}${receiptParams.dataareaid}${receiptParams.storeno}${receiptParams.date}`.toLowerCase();
+            console.log('Raw data for signature:', rawData);
+            
+            const signature = await generateHMACSignature(HMAC_SECRET, rawData);
+            if (!signature) {
+                setNotification('Error: Failed to generate signature.');
+                return;
+            }
+            
+            console.log('Generated signature:', signature);
+
+            const payload = {
+                TAXREGNUM: companyTaxNumber,
+                TAXCOMPANYNAME: companyName,
+                TAXCOMPANYADDRESS: companyAddress,
+                PURCHASERNAME: customerName,
+                EMAIL: customerEmail || "",
+                PHONE: phoneNumber || "",
+                CCCD: cccd || "",
+                MAQHNS: maqhns || "",
+                INVOICEDATE: receiptParams.date,
+                RETAILTRANSACTIONTABLE: receiptParams.recid,
+                DATAAREAID: receiptParams.dataareaid
+            };
+
+            const apiUrl = `https://10.0.83.4/VATInformation/receipt?receiptid=${receiptParams.receiptid}&dataareaid=${receiptParams.dataareaid}&storeno=${receiptParams.storeno}&date=${receiptParams.date}&sign=${signature}`;
+            
+            console.log("Final API URL:", apiUrl);
+            console.log("Payload:", payload);
+
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -126,6 +178,7 @@ function RegistrationForm() {
 
             if (response.ok) {
                 setNotification('Save successful! Your information has been submitted.');
+                // Clear form
                 setCompanyName("");
                 setCompanyTaxNumber("");
                 setCompanyAddress("");
@@ -134,12 +187,16 @@ function RegistrationForm() {
                 setCustomerEmail("");
                 setCccd("");
                 setMaqhns("");
+            } else if (response.status === 401) {
+                setNotification('Error: Invalid signature. Authentication failed.');
             } else if (response.status === 409) {
                 setNotification('Error: A record with this RetailTransactionTable already exists.');
             } else if (response.status === 400) {
                 setNotification('Error: Invalid input data.');
             } else {
-                setNotification('Error: Failed to save. Please try again.');
+                const errorResponse = await response.text();
+                console.error('Server response:', errorResponse);
+                setNotification(`Error: Failed to save. Status: ${response.status}`);
             }
 
         } catch (error) {
