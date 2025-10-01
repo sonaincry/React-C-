@@ -3,7 +3,6 @@ import './RegistrationForm.css';
 import logo from './logo.png';
 
 function RegistrationForm() {
-
     const [companyName, setCompanyName] = useState('');
     const [companyTaxNumber, setCompanyTaxNumber] = useState('');
     const [companyAddress, setCompanyAddress] = useState('');
@@ -19,81 +18,39 @@ function RegistrationForm() {
     const [notification, setNotification] = useState('');
     const [cccdError, setCccdError] = useState('');
 
-    const [receiptId, setReceiptId] = useState(null);
     const [formKey, setFormKey] = useState(0);
     const [receiptParams, setReceiptParams] = useState(null);
 
     const HMAC_SECRET = "LdL3hgtuCk8MxiMN/Sc7xBfQdFnlp5o8GMxFPB5NIkA=";
 
-    const generateHMACSignature = async (secretKey, data) => {
-        try {
-            const keyBuffer = Uint8Array.from(atob(secretKey), c => c.charCodeAt(0));
-
-            const cryptoKey = await crypto.subtle.importKey(
-                'raw',
-                keyBuffer,
-                { name: 'HMAC', hash: 'SHA-256' },
-                false,
-                ['sign']
-            );
-            
-            const dataBuffer = new TextEncoder().encode(data);
-            
-            const signature = await crypto.subtle.sign('HMAC', cryptoKey, dataBuffer);
-            
-            const hashArray = Array.from(new Uint8Array(signature));
-            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            
-            return hashHex.toLowerCase();
-        } catch (error) {
-            console.error('Error generating HMAC signature:', error);
-            return null;
-        }
-    };
-
     useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-    const receiptid = queryParams.get('receiptid');
-    const date = queryParams.get('date');
-    const dataareaid = queryParams.get('dataareaid');
-    const storeno = queryParams.get('storeno');
-    const sign = queryParams.get('sign');
+        // Get the raw query string
+        const queryString = window.location.search;
+        console.log("Raw query string:", queryString);
 
-    if (!receiptid || !date || !dataareaid || !storeno || !sign) {
-        setNotification("Error: Missing required URL parameters.");
-        return;
-    }
+        // Parse query parameters
+        const queryParams = new URLSearchParams(queryString);
+        const receiptid = queryParams.get('receiptid');
+        const date = queryParams.get('date');
+        const dataareaid = queryParams.get('dataareaid');
+        const storeno = queryParams.get('storeno');
 
-    const fetchRecid = async () => {
-        try {
-            console.log('Fetching recid for:', receiptid);
-            const res = await fetch(`https://10.0.83.4/VATInformation/get-recid?receiptId=${receiptid}`); 
-            
-            console.log('Response status:', res.status);
-            console.log('Response ok:', res.ok);
-            
-            if (!res.ok) {
-                const errorText = await res.text();
-                console.error('Error response:', errorText);
-                setNotification(`Error: Failed to fetch recid. Status: ${res.status}`);
-                return;
-            }
-            
-            const recidData = await res.json();
-            console.log('Received recid:', recidData);
-            const recid = recidData;
-
-            setReceiptId(receiptid);
-            setReceiptParams({ receiptid, date, recid, dataareaid, storeno, sign });
-            console.log('Receipt params set successfully');
-        } catch (err) {
-            console.error("Error fetching recid:", err);
-            setNotification(`Error: Could not connect to server. ${err.message}`);
+        // Extract sign from raw query string to preserve special characters
+        let sign = null;
+        const signMatch = queryString.match(/[?&]sign=([^&]*)/);
+        if (signMatch) {
+            sign = signMatch[1];
+            console.log("Raw sign from query string:", sign);
         }
-    };
 
-    fetchRecid();
-}, []);
+        if (!receiptid || !date || !dataareaid || !storeno || !sign) {
+            setNotification("Error: Missing required URL parameters.");
+            return;
+        }
+
+        setReceiptParams({ receiptid, date, dataareaid, storeno, sign });
+        console.log('Receipt params set successfully:', { receiptid, date, dataareaid, storeno, sign });
+    }, []);
 
     const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     const validateTaxNumber = (value) => /^\d+$/.test(value);
@@ -107,8 +64,8 @@ function RegistrationForm() {
         e.preventDefault();
         setNotification('');
 
-        if (!receiptParams || !receiptParams.recid) {
-            setNotification('Error: Cannot submit without a valid recid.');
+        if (!receiptParams) {
+            setNotification('Error: Missing receipt parameters.');
             return;
         }
 
@@ -143,8 +100,13 @@ function RegistrationForm() {
             setNotification('Saving...');
 
             const signature = receiptParams.sign;
-            console.log('Using signature from URL:', signature);
-            
+            const rawData = `${receiptParams.receiptid}${receiptParams.dataareaid}${receiptParams.storeno}${receiptParams.date}`.toLowerCase();
+            console.log("Raw sign:", signature);
+            console.log("Encoded sign:", encodeURIComponent(signature));
+            console.log("Frontend rawData:", rawData);
+
+            const apiUrl = `https://10.0.83.4/VATInformation/receipt?receiptid=${encodeURIComponent(receiptParams.receiptid)}&dataareaid=${encodeURIComponent(receiptParams.dataareaid)}&storeno=${encodeURIComponent(receiptParams.storeno)}&date=${encodeURIComponent(receiptParams.date)}&sign=${encodeURIComponent(signature)}`;
+            console.log("Final API URL:", apiUrl);
 
             const payload = {
                 TAXREGNUM: companyTaxNumber,
@@ -156,17 +118,13 @@ function RegistrationForm() {
                 CCCD: cccd || "",
                 MAQHNS: maqhns || "",
                 INVOICEDATE: receiptParams.date,
-                RETAILTRANSACTIONTABLE: receiptParams.recid,
                 DATAAREAID: receiptParams.dataareaid,
                 RETAILRECEIPTID: receiptParams.receiptid,
                 RETAILSTOREID: receiptParams.storeno
             };
-            
-            const apiUrl = `https://10.0.83.4/VATInformation/receipt?receiptid=${receiptParams.receiptid}&dataareaid=${receiptParams.dataareaid}&storeno=${receiptParams.storeno}&date=${receiptParams.date}&sign=${signature}`;
-            
-            console.log("Final API URL:", apiUrl);
+
             console.log("Payload:", payload);
-            
+
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -184,17 +142,18 @@ function RegistrationForm() {
                 setCccd("");
                 setMaqhns("");
             } else if (response.status === 401) {
+                const errorText = await response.text();
+                console.error('401 Error response:', errorText);
                 setNotification('Error: Invalid signature. Authentication failed.');
             } else if (response.status === 409) {
-                setNotification('Receipt already updated VAT infomartion.');
+                setNotification('Receipt already updated VAT information.');
             } else if (response.status === 400) {
                 setNotification('Invalid input data.');
             } else {
-                const errorResponse = await response.text();
-                console.error('Server response:', errorResponse);
+                const errorText = await response.text();
+                console.error('Server response:', errorText);
                 setNotification(`Failed to save. Status: ${response.status}`);
             }
-
         } catch (error) {
             setNotification('Error: Server not reachable.');
             console.error('Error saving form:', error);
