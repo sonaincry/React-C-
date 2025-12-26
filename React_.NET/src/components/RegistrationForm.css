@@ -1,3 +1,8 @@
+body {
+    font-family: Inter,sans-serif;
+    -webkit-tap-highlight-color: transparent
+}
+
 .registration-container {
   max-width: 900px;
   margin: 40px auto;
@@ -12,7 +17,7 @@
   grid-template-columns: 1fr 6fr 1fr; 
   align-items: center;
   gap: 20px;
-  margin-bottom: 30px;
+  margin-bottom: 15px; 
 }
 
 .logo-container {
@@ -20,13 +25,19 @@
 }
 
 .logo-container img {
-  max-height: 80px;
+  max-height: 90px;
   height: auto;
 }
 
 .form-heading {
-  font-size: 24px;
-  font-weight: bold;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 35px;
+  color: #fff;
+  display: inline-block;
+  margin-top: 55px;
+  transform: scaleY(0.8);
+  text-shadow: 1px 0 #d92029, -1px 0 #d92029, 0 1px #d92029, 0 -1px #d92029,
+           1px 1px #d92029, -1px -1px #d92029, 1px -1px #d92029, -1px 1px #d92029;
   text-align: center;
   margin: 0;
   justify-self: center;
@@ -36,6 +47,39 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.preview-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.preview-note {
+  background: linear-gradient(to right, #d0dcf0, #e3c6e6); /* Match the form backgrounsd gradient */
+  font-size: 16px;
+  text-align: center;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 5px; 
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid #e33d3d; 
+  color: #a92f2f;
+}
+
+.preview-icon {
+  background-color: #ff9900;
+  color: white;
+  font-weight: bold;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
 }
 
 .form-columns {
@@ -51,10 +95,11 @@
   flex-direction: column;
   gap: 15px;
 }
+
 .form-column label,
 .registration-form .form-column label {
-  font-weight: bold;
-  margin-bottom: 4px;
+  font-weight: 400;
+  margin-bottom: -8px;
   text-align: left !important;
   display: block;
   width: 100%;
@@ -68,6 +113,19 @@
   border-radius: 6px;
   box-sizing: border-box;
   width: 100%;
+  margin-bottom: 10px;
+}
+
+.preview-value {
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-sizing: border-box;
+  width: 100%;
+  margin-bottom: 10px;
+  background: #f9f9f9;
+  color: #333;
 }
 
 input.input-error {
@@ -96,19 +154,99 @@ input.input-error {
   margin-top: 20px;
 }
 
+.preview-buttons {
+  justify-content: space-between;
+  gap: 2px;
+}
+
+.preview-buttons .cancel-button,
+.preview-buttons .register-button {
+  width: 48%;
+}
+
 .register-button {
   padding: 10px 20px;
   border: none;
-  border-radius: 6px;
+  border-radius: 25px;
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.2s;
-  background-color: #147f83;
+  background-color: #d92029;
   color: white;
+  width: 100%;
+  text-transform: uppercase;
+}
+
+.cancel-button {
+  padding: 10px 20px;
+  border: 1px solid #d92029;
+  border-radius: 25px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  background-color: white;
+  color: #d92029;
+  width: 48%;
+  text-transform: uppercase;
+}
+
+.register-button::before {
+  content: "\f1d8";
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  margin-right: 10px;
 }
 
 .register-button:hover {
-  background-color: #5a0099;
+  background-color: #8dc73f;
+}
+
+.cancel-button:hover {
+  background-color: #f5f5f5;
+}
+
+.transaction-summary {
+  display: flex;
+  width: 100%; 
+  flex-direction: column; 
+  align-items: flex-start; 
+  gap: 10px; 
+  padding: 10px 12px; 
+  border-radius: 6px; 
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid #ddd; 
+  text-align: left;
+  box-sizing: border-box; 
+  margin-bottom: 10px; 
+}
+
+.transaction-item {
+  display: flex;
+  flex-direction: row; 
+  gap: 8px; 
+  align-items: baseline; 
+  width: auto; 
+}
+
+.transaction-item .label {
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+}
+
+.transaction-item .label::after {
+  content: ": ";
+}
+
+.transaction-item .value {
+  font-size: 16px;
+  color: #000;
+}
+
+.transaction-item .value.amount {
+  font-size: 18px;
+  font-weight: bold;
+  color: #147f83;
 }
 
 @media (max-width: 768px) {
@@ -133,7 +271,7 @@ input.input-error {
     align-items: center;
     text-align: center;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 15px; 
   }
 
   .logo-container {
@@ -143,13 +281,14 @@ input.input-error {
   }
 
   .logo-container img {
-    max-width: 80px;
+    max-width: none;
     height: auto;
+    overflow: visible;
   }
 
   .form-heading {
     font-size: 20px;
-    margin-top: 5px;
+    margin-top: 10px;
   }
 
   .form-buttons {
@@ -159,5 +298,20 @@ input.input-error {
   .form-column label,
   .registration-form .form-column label {
     text-align: left !important;
+  }
+  .transaction-summary {
+    width: 100%; 
+    box-sizing: border-box; 
+    margin-bottom: 10px; 
+  }
+  .preview-buttons .cancel-button,
+  .preview-buttons .register-button {
+    width: 48%;
+  }
+  .preview-buttons {
+    gap: 10px; 
+  }
+  .preview-note {
+    margin-bottom: 5px; 
   }
 }
