@@ -53,11 +53,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  text-align: left;
 }
 
 .preview-note {
-  background: linear-gradient(to right, #d0dcf0, #e3c6e6); /* Match the form backgrounsd gradient */
-  font-size: 16px;
+  background: linear-gradient(to right, #d0dcf0, #e3c6e6); 
   text-align: center;
   padding: 15px;
   border-radius: 6px;
@@ -114,6 +114,7 @@ body {
   box-sizing: border-box;
   width: 100%;
   margin-bottom: 10px;
+  text-align: left;
 }
 
 .preview-value {
@@ -147,6 +148,21 @@ input.input-error {
   background-color: transparent;
   pointer-events: none;
 }
+
+.note-error {
+  background: linear-gradient(to right, #fdecea, #f8d7da);
+  border: 1px solid #e33d3d;
+  color: #a92f2f;
+  font-weight: 500;
+}
+
+.note-success {
+  background: linear-gradient(to right, #e8f5e9, #d4edda);
+  border: 1px solid #4caf50;
+  color: #1b5e20;
+  font-weight: 500;
+}
+
 
 .form-buttons {
   display: flex;
@@ -191,8 +207,6 @@ input.input-error {
 }
 
 .register-button::before {
-  content: "\f1d8";
-  font-family: "Font Awesome 6 Free";
   font-weight: 900;
   margin-right: 10px;
 }

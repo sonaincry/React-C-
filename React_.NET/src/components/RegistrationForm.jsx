@@ -30,6 +30,7 @@ function RegistrationForm() {
   const [storeName, setStoreName] = useState(null);
 
   const [isPreview, setIsPreview] = useState(false);
+  const [notificationType, setNotificationType] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const HMAC_SECRET = "LdL3hgtuCk8MxiMN/Sc7xBfQdFnlp5o8GMxFPB5NIkA=";
@@ -134,26 +135,26 @@ function RegistrationForm() {
     let valid = true;
     if (!companyTaxNumber || !validateTaxNumber(companyTaxNumber)) {
       setTaxError(
-        "Tax number must be numeric and have 10 digits or 13 digits.",
+        "Mã số thuế phải là 10 hoặc 12 chữ số, hoặc định dạng 10-xxx.",
       );
       valid = false;
     } else {
       setTaxError("");
     }
     if (phoneNumber && !validatePhoneNumber(phoneNumber)) {
-      setPhoneError("Phone must be 10 digits and start with 0.");
+      setPhoneError("SĐT phải là 10 chữ số và bắt đầu bằng 0.");
       valid = false;
     } else {
       setPhoneError("");
     }
     if (customerEmail && !validateEmail(customerEmail)) {
-      setEmailError("Please enter a valid email address.");
+      setEmailError("Vui lòng nhập đúng định dạng email.");
       valid = false;
     } else {
       setEmailError("");
     }
     if (cccd && !validateCCCD(cccd)) {
-      setCccdError("CCCD must be exactly 12 digits.");
+      setCccdError("CCCD phải là 12 chữ số.");
       valid = false;
     } else {
       setCccdError("");
@@ -164,11 +165,11 @@ function RegistrationForm() {
   const handlePreview = () => {
     setNotification("");
     if (!isConfigLoaded) {
-      setNotification("Error: Configuration not loaded yet.");
+      setNotification("Error: Chưa load config.");
       return;
     }
     if (!receiptParams) {
-      setNotification("Error: Missing receipt parameters.");
+      setNotification("Error: receipt thiếu các trường quy định.");
       return;
     }
     if (validateForm()) {
@@ -181,12 +182,12 @@ function RegistrationForm() {
     setNotification("");
 
     if (!isConfigLoaded) {
-      setNotification("Error: Configuration not loaded yet.");
+      setNotification("Error: Chưa load config.");
       return;
     }
 
     if (!receiptParams) {
-      setNotification("Error: Missing receipt parameters.");
+      setNotification("Error: receipt thiếu các trường quy định.");
       return;
     }
 
@@ -232,27 +233,30 @@ function RegistrationForm() {
 
       if (response.ok) {
         setNotification("Cập nhật thông tin xuất hóa đơn thành công");
-        setCompanyName("");
-        setCompanyTaxNumber("");
-        setCompanyAddress("");
-        setCustomerName("");
-        setPhoneNumber("");
-        setCustomerEmail("");
-        setCccd("");
-        setMaqhns("");
+        setNotificationType("success");
+
+        // setCompanyName("");
+        // setCompanyTaxNumber("");
+        // setCompanyAddress("");
+        // setCustomerName("");
+        // setPhoneNumber("");
+        // setCustomerEmail("");
+        // setCccd("");
+        // setMaqhns("");
+
         setIsSubmitted(true);
-      } else if (response.status === 401) {
-        const errorText = await response.text();
-        console.error("401 Error response:", errorText);
-        setNotification("Error: Invalid signature. Authentication failed.");
       } else if (response.status === 409) {
-        setNotification("Hóa đơn nãy đã  đăng ký xuất hóa đơn.");
+        setNotification("Lỗi nhập thông tin hóa đơn! Hóa đơn này đã đăng ký xuất hóa đơn.");
+        setNotificationType("error");
       } else if (response.status === 400) {
-        setNotification("Thông tin không hợp lệ.");
+        setNotification("Lỗi nhập thông tin hóa đơn! Thông tin không hợp lệ.");
+        setNotificationType("error");
+      } else if (response.status === 401) {
+        setNotification("Lỗi xác thực. Secret key không đúng.");
+        setNotificationType("error");
       } else {
-        const errorText = await response.text();
-        console.error("Server response:", errorText);
         setNotification(`Lưu thất bại. Status: ${response.status}`);
+        setNotificationType("error");
       }
     } catch (error) {
       setNotification("Error: Không kết nối được server.");
@@ -401,10 +405,19 @@ function RegistrationForm() {
         </form>
       ) : (
         <div className="preview-form">
-          <p className="preview-note">
-            Vui lòng kiểm tra lại thông tin xuất hóa đơn chính xác trước khi bấm
-            xác nhận.
-          </p>
+          <div
+            className={`preview-note ${
+              notificationType === "error"
+                ? "note-error"
+                : notificationType === "success"
+                  ? "note-success"
+                  : ""
+            }`}
+          >
+            {notification
+              ? notification
+              : "Vui lòng kiểm tra lại thông tin xuất hóa đơn chính xác trước khi bấm xác nhận."}
+          </div>
           <div className="form-columns">
             <div className="form-column">
               <label>Tên Công Ty</label>
@@ -443,25 +456,13 @@ function RegistrationForm() {
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="register-button"
+                className={`register-button ${isSubmitted ? "btn-disabled" : ""}`}
+                disabled={isSubmitted}
               >
-                Đăng ký
+                {isSubmitted ? "Đã đăng ký" : "Đăng ký"}
               </button>
             </div>
           )}
-        </div>
-      )}
-
-      {notification && isPreview && (
-        <div
-          className="notification"
-          style={{
-            marginTop: "20px",
-            textAlign: "center",
-            color: notification.includes("Lỗi") ? "red" : "green",
-          }}
-        >
-          {notification}
         </div>
       )}
     </div>
