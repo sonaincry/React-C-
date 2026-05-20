@@ -163,6 +163,13 @@ input.input-error {
   font-weight: 500;
 }
 
+/* Warning style for bill not synced yet */
+.note-warning {
+  background: linear-gradient(to right, #fff8e1, #fff3cd);
+  border: 1px solid #f9a825;
+  color: #e65100;
+  font-weight: 500;
+}
 
 .form-buttons {
   display: flex;
@@ -328,4 +335,28 @@ input.input-error {
   .preview-note {
     margin-bottom: 5px; 
   }
+}
+.tax-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.no-tax-checkbox {
+  font-size: 12px;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #555;
+}
+
+.no-tax-checkbox input {
+  transform: scale(0.9);
+  cursor: pointer;
+}
+
+.required {
+  color: red;
+  margin-left: 4px;
 }
